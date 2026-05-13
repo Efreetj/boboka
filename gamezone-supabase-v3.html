@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>电玩店前台管理系统</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<style>
+  :root {
+    --bg:#F5F6FA;--bg-white:#FFF;--fg:#1A1D2E;--fg2:#6B7194;--fg3:#9CA3C4;
+    --accent:#FF6B35;--accent-l:#FFF0EB;--accent-h:#E85A28;
+    --ok:#10B981;--ok-l:#ECFDF5;--warn:#F59E0B;--warn-l:#FFFBEB;
+    --info:#8B5CF6;--info-l:#F5F3FF;--err:#EF4444;--err-l:#FEF2F2;
+    --bdr:#E5E7F0;--bdr-l:#F0F1F5;
+    --sh-s:0 1px 3px rgba(26,29,46,.06);--sh-m:0 4px 12px rgba(26,29,46,.08);--sh-l:0 8px 30px rgba(26,29,46,.1);
+    --r-s:8px;--r-m:12px;--r-l:16px;
+    --fd:'DM Sans','Noto Sans SC',sans-serif;--fb:'Noto Sans SC',sans-serif;
+    --g-a:#10B981;--g-r:#8B5CF6;--g-e:#EF4444;
+    --c-hall:#F59E0B;--c-booth:#3B82F6;--c-pvt:#8B5CF6;
+    --c-ps5:#006FCD;--c-switch:#E60012;--c-race:#F59E0B;--c-movie:#8B5CF6;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:var(--fb);background:var(--bg);color:var(--fg);line-height:1.6;min-height:100vh}
+
+  .header{background:var(--bg-white);border-bottom:1px solid var(--bdr);padding:12px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--sh-s)}
+  .header-left{display:flex;align-items:center;gap:12px}
+  .header-logo{width:38px;height:38px;background:linear-gradient(135deg,var(--accent),#FF8F65);border-radius:var(--r-s);display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;box-shadow:0 2px 8px rgba(255,107,53,.3);flex-shrink:0}
+  .header-title-wrap{display:flex;align-items:center;gap:6px;cursor:pointer}
+  .header-title{font-family:var(--fd);font-size:19px;font-weight:700;color:var(--fg);letter-spacing:-.5px;border-bottom:1.5px dashed transparent;transition:border-color .2s;padding-bottom:1px}
+  .header-title-wrap:hover .header-title{border-bottom-color:var(--accent)}
+  .header-title-edit{display:none;font-family:var(--fd);font-size:19px;font-weight:700;border:1.5px solid var(--accent);border-radius:6px;padding:2px 8px;outline:none;width:200px}
+  .header-title-edit.active{display:block}
+  .header-sub{font-size:11px;color:var(--fg3)}
+  .header-right{display:flex;align-items:center;gap:14px}
+  .header-clock{font-family:var(--fd);font-size:24px;font-weight:700;color:var(--fg);letter-spacing:-1px}
+  .header-date{font-size:11px;color:var(--fg2);text-align:right}
+
+  .main{max-width:1800px;margin:0 auto;padding:16px 28px 40px;display:flex;flex-direction:column;gap:16px}
+
+  .card{background:var(--bg-white);border-radius:var(--r-l);border:1px solid var(--bdr);box-shadow:var(--sh-s);overflow:hidden;transition:box-shadow .2s}
+  .card:hover{box-shadow:var(--sh-m)}
+  .card-hd{padding:10px 16px;border-bottom:1px solid var(--bdr-l);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .card-hd-l{display:flex;align-items:center;gap:7px}
+  .ci{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px}
+  .ci.o{background:var(--accent-l);color:var(--accent)}.ci.b{background:var(--info-l);color:var(--info)}.ci.g{background:var(--ok-l);color:var(--ok)}.ci.g2{background:#D1FAE5;color:#059669}.ci.y{background:var(--warn-l);color:var(--warn)}.ci.r{background:var(--err-l);color:var(--err)}.ci.r2{background:#FEE2E2;color:#DC2626}.ci.p{background:#EDE9FE;color:#7C3AED}
+  .badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;border-radius:10px;font-size:11px;font-weight:700;margin-left:6px}
+  .badge.active{background:#D1FAE5;color:#059669}.badge.reserved{background:#EDE9FE;color:#7C3AED}.badge.ended{background:#FEE2E2;color:#DC2626}
+  .ct{font-family:var(--fd);font-size:13px;font-weight:600;color:var(--fg)}
+  .card-bd{padding:12px 16px}
+
+  .sg2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+  /* Gantt + Status side by side */
+  .gantt-row{display:flex;gap:16px;align-items:flex-start}
+  .gantt-row .gantt-main{flex:1;min-width:0}
+  .gantt-row .status-side{width:240px;flex-shrink:0;display:flex;flex-direction:column;gap:12px}
+
+  .fr{display:flex;gap:8px;margin-bottom:10px;align-items:flex-end;flex-wrap:wrap}
+  .fr:last-child{margin-bottom:0}
+  .fg{flex:1;min-width:90px;display:flex;flex-direction:column;gap:3px}
+  .fg.n{flex:0 0 80px}.fg.m{flex:0 0 130px}
+  .fl{font-size:10px;font-weight:500;color:var(--fg2);text-transform:uppercase;letter-spacing:.5px}
+  .fi,.fs{height:34px;padding:0 8px;border:1.5px solid var(--bdr);border-radius:var(--r-s);font-size:12px;font-family:var(--fb);color:var(--fg);background:var(--bg-white);transition:all .2s;outline:none;width:100%}
+  .fi:focus,.fs:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,107,53,.1)}
+  .fi::placeholder{color:var(--fg3)}
+  .fs{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7194' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:24px}
+  .fs option:disabled{color:var(--fg3)}
+  .fs optgroup{font-weight:600;color:var(--fg);font-style:normal}
+
+  .btn{height:34px;padding:0 14px;border:none;border-radius:var(--r-s);font-size:12px;font-weight:600;font-family:var(--fb);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:5px;transition:all .2s;white-space:nowrap}
+  .btn-p{background:var(--accent);color:#fff;box-shadow:0 2px 6px rgba(255,107,53,.25)}.btn-p:hover{background:var(--accent-h);transform:translateY(-1px)}
+  .btn-s{background:var(--bg);color:var(--fg2);border:1.5px solid var(--bdr)}.btn-s:hover{background:var(--bdr-l);color:var(--fg)}
+  .btn-d{background:var(--err-l);color:var(--err)}.btn-d:hover{background:var(--err);color:#fff}
+  .btn-i{background:var(--info);color:#fff}.btn-i:hover{background:#7C3AED;transform:translateY(-1px)}
+  .btn-sm{height:26px;padding:0 8px;font-size:11px;border-radius:5px}
+  .btn-ic{width:26px;height:26px;padding:0;border-radius:5px;font-size:11px}
+
+  .tl{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .tg{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:var(--bg);border:1px solid var(--bdr);border-radius:16px;font-size:12px;color:var(--fg);transition:all .2s}
+  .tg:hover{border-color:var(--accent)}
+  .tg .tx{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--fg3);cursor:pointer;transition:all .15s;background:transparent;border:none}
+  .tg .tx:hover{background:var(--err);color:#fff}
+
+  .rc{margin-bottom:12px}.rc:last-child{margin-bottom:0}
+  .rc-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;padding-bottom:5px;border-bottom:1px solid var(--bdr-l)}
+  .rc-t{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--fg)}
+  .rc-t i{font-size:11px}
+  .rc-t.hall i{color:var(--c-hall)}.rc-t.booth i{color:var(--c-booth)}.rc-t.private i{color:var(--c-pvt)}
+
+  .dev-cat{margin-bottom:14px}.dev-cat:last-child{margin-bottom:0}
+  .dev-cat-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--bdr-l)}
+  .dev-cat-t{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--fg)}
+  .dev-cat-t i{font-size:12px}
+  .dev-cat-t.ps5 i{color:var(--c-ps5)}.dev-cat-t.switch i{color:var(--c-switch)}.dev-cat-t.racing i{color:var(--c-race)}.dev-cat-t.movie i{color:var(--c-movie)}
+  .dev-cat-t .dev-count{font-size:11px;font-weight:400;color:var(--fg3)}
+
+  /* Status */
+  .sc{padding:8px 12px}
+  .si{display:flex;align-items:center;justify-content:space-between;padding:4px 8px;border-radius:5px;font-size:11px;transition:background .15s;gap:6px}
+  .si:hover{background:var(--bg)}.si+.si{margin-top:1px}
+  .sl{display:flex;align-items:center;gap:6px;min-width:0}
+  .sn{font-weight:600;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px}
+  .sd{font-size:10px;color:var(--fg3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sr{display:flex;align-items:center;gap:5px;flex-shrink:0}
+  .sb{padding:1px 7px;border-radius:8px;font-size:9px;font-weight:600;white-space:nowrap}
+  .sb.iu{background:var(--ok-l);color:var(--ok)}.sb.rs{background:var(--info-l);color:var(--info)}.sb.en{background:var(--err-l);color:var(--err)}.sb.fr{background:#F3F4F6;color:var(--fg3)}.sb.ex{background:var(--err-l);color:var(--err)}
+  .sct{font-size:10px;font-weight:600;color:var(--fg2)}.sct .u{color:var(--err)}.sct .t{color:var(--fg3)}
+
+  .ci2{display:flex;align-items:center;justify-content:space-between;padding:4px 8px;border-radius:5px;font-size:11px}
+  .ci2+.ci2{margin-top:1px}.ci2:hover{background:var(--bg)}
+  .ceb{width:20px;height:20px;border:none;background:transparent;color:var(--fg3);cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all .15s}
+  .ceb:hover{background:var(--accent-l);color:var(--accent)}
+
+  /* Gantt */
+  .gw{overflow-x:auto;overflow-y:visible}
+  .gc{display:flex;flex-direction:column;min-width:fit-content}
+  .ghr{display:flex;position:sticky;top:0;z-index:10;background:var(--bg-white)}
+  .gth{width:60px;min-width:60px;padding:6px;text-align:center;font-size:10px;font-weight:600;color:var(--fg3);background:var(--bg);border-right:1px solid var(--bdr);border-bottom:2px solid var(--bdr)}
+  .grh{display:flex;flex:1}
+  .gcg{display:flex;flex-direction:column}
+  .gcl{padding:5px 8px;text-align:center;font-size:9px;font-weight:700;letter-spacing:.5px;color:#fff;border-bottom:2px solid var(--bdr)}
+  .gcl.hall{background:var(--c-hall)}.gcl.booth{background:var(--c-booth)}.gcl.private{background:var(--c-pvt)}
+  .grls{display:flex;border-bottom:2px solid var(--bdr)}
+  .grl{width:90px;min-width:90px;padding:6px 3px;text-align:center;font-size:11px;font-weight:600;color:var(--fg);border-right:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;word-break:break-all;line-height:1.3}
+  .grl:last-child{border-right:none}
+  .gb{display:flex;flex-direction:column;position:relative}
+  .gtr{display:flex;height:60px;border-bottom:1px solid var(--bdr-l)}.gtr:last-child{border-bottom:none}
+  .gtl{width:60px;min-width:60px;padding:0 6px;display:flex;align-items:flex-start;justify-content:center;font-size:10px;font-weight:500;color:var(--fg2);background:var(--bg);border-right:1px solid var(--bdr);flex-shrink:0}
+  .gcr{display:flex;flex:1;position:relative}
+  .gce{width:90px;min-width:90px;border-right:1px solid var(--bdr-l);position:relative;background:var(--bg-white)}.gce:last-child{border-right:none}.gce:nth-child(odd){background:#FAFBFC}
+  .gbk{position:absolute;left:2px;right:2px;border-radius:4px;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:3px 4px;font-size:9px;font-weight:600;overflow:hidden;cursor:pointer;transition:all .2s ease;z-index:2;min-height:22px}
+  .gbk:hover{transform:scale(1.03);box-shadow:0 4px 12px rgba(0,0,0,.15);z-index:10}
+  .gbk.active{background:linear-gradient(135deg,var(--g-a),#34D399);color:#fff;box-shadow:0 2px 6px rgba(16,185,129,.3)}
+  .gbk.reserved{background:linear-gradient(135deg,var(--g-r),#A78BFA);color:#fff;box-shadow:0 2px 6px rgba(139,92,246,.3)}
+  .gbk.ended{background:linear-gradient(135deg,var(--g-e),#F87171);color:#fff;box-shadow:0 2px 6px rgba(239,68,68,.3)}
+  .gbk-t{font-size:9px;opacity:.9;white-space:nowrap}.gbk-d{font-size:8px;opacity:.85;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}.gbk-p{font-size:8px;opacity:.8;white-space:nowrap}.gbk-c{font-size:8px;opacity:.75;white-space:nowrap;color:#FFD700}.gbk-ph{font-size:8px;opacity:.9;white-space:nowrap;color:#60A5FA;font-weight:700}
+  .gnl{position:absolute;left:60px;right:0;height:2px;background:var(--err);z-index:5;pointer-events:none}
+  .gnl::before{content:'现在';position:absolute;left:-32px;top:-7px;font-size:8px;font-weight:600;color:var(--err);white-space:nowrap}
+  .gnd{position:absolute;left:-4px;top:-4px;width:10px;height:10px;background:var(--err);border-radius:50%}
+
+  .sll{display:flex;flex-direction:column;gap:5px;max-height:240px;overflow-y:auto;padding-right:4px}
+  .sll::-webkit-scrollbar{width:3px}.sll::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
+  .sli{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--bg);border-radius:var(--r-s);border-left:3px solid var(--ok);transition:all .2s}
+  .sli.reserved{border-left-color:var(--info)}.sli.ended{border-left-color:var(--err)}.sli:hover{background:var(--bdr-l)}
+  .slf{display:flex;flex-direction:column;gap:1px;min-width:0}
+  .slr{font-size:12px;font-weight:600;color:var(--fg)}
+  .sld{font-size:10px;color:var(--fg2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sla{display:flex;gap:4px;flex-shrink:0}
+
+  .es{text-align:center;padding:20px 14px;color:var(--fg3)}.es i{font-size:28px;margin-bottom:8px;opacity:.4}.es p{font-size:12px}
+
+  .tc{position:fixed;top:70px;right:28px;z-index:1000;display:flex;flex-direction:column;gap:6px}
+  .tt{padding:8px 14px;background:var(--fg);color:#fff;border-radius:var(--r-s);font-size:12px;font-weight:500;box-shadow:var(--sh-l);animation:ti .3s ease,to .3s ease 2.5s forwards;display:flex;align-items:center;gap:6px}
+  .tt.success{background:var(--ok)}.tt.error{background:var(--err)}.tt.info{background:var(--info)}
+  @keyframes ti{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+  @keyframes to{from{opacity:1}to{opacity:0;transform:translateY(-10px)}}
+
+  .mo{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(26,29,46,.4);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:all .25s}
+  .mo.active{opacity:1;visibility:visible}
+  .md{background:var(--bg-white);border-radius:var(--r-l);padding:20px;width:90%;max-width:420px;box-shadow:var(--sh-l);transform:scale(.95);transition:transform .25s}
+  .mo.active .md{transform:scale(1)}
+  .mt{font-family:var(--fd);font-size:15px;font-weight:700;margin-bottom:14px;color:var(--fg)}
+  .ma{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+
+  .lg{display:flex;gap:12px;align-items:center}
+  .li{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--fg2)}
+  .ld{width:8px;height:8px;border-radius:2px}
+  .ld.active{background:var(--g-a)}.ld.reserved{background:var(--g-r)}.ld.ended{background:var(--g-e)}
+
+  .cgt{display:flex;gap:4px}
+  .cgb{height:34px;padding:0 12px;border:1.5px solid var(--bdr);border-radius:var(--r-s);background:var(--bg-white);font-size:12px;font-weight:500;font-family:var(--fb);color:var(--fg2);cursor:pointer;transition:all .15s}
+  .cgb:hover{border-color:var(--accent);color:var(--accent)}.cgb.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+  /* Calendar */
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:12px}
+  .cal-hd{padding:6px 4px;text-align:center;font-size:10px;font-weight:600;color:var(--fg3);background:var(--bg);border-radius:4px}
+  .cal-day{padding:8px 4px;text-align:center;font-size:12px;border-radius:6px;cursor:pointer;transition:all .15s;position:relative;min-height:36px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+  .cal-day:hover{background:var(--bdr-l)}
+  .cal-day.today{background:var(--accent-l);color:var(--accent);font-weight:700}
+  .cal-day.selected{background:var(--accent);color:#fff;font-weight:700}
+  .cal-day.other{color:var(--fg3);opacity:.4}
+  .cal-day .cal-dot{width:5px;height:5px;border-radius:50%;background:var(--ok)}
+  .cal-day.selected .cal-dot{background:#fff}
+  .cal-day.has-data::after{content:'';position:absolute;bottom:3px;width:4px;height:4px;border-radius:50%;background:var(--info)}
+  .cal-day.selected.has-data::after{background:#fff}
+
+  /* History Table */
+  .htw{overflow-x:auto;margin-top:8px}
+  .ht{width:100%;border-collapse:collapse;font-size:11px}
+  .ht th{background:var(--bg);padding:8px 10px;text-align:left;font-weight:600;color:var(--fg2);border-bottom:2px solid var(--bdr);white-space:nowrap}
+  .ht td{padding:7px 10px;border-bottom:1px solid var(--bdr-l);color:var(--fg);white-space:nowrap}
+  .ht tbody tr:hover{background:var(--bdr-l)}
+  .hist-table-title{font-size:13px;font-weight:600;color:var(--fg);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+  .hist-table-title i{color:var(--accent)}
+
+  /* Analysis */
+  .ana-charts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+  .ana-chart-box{background:var(--bg);border-radius:var(--r-m);padding:16px;border:1px solid var(--bdr-l)}
+  .ana-chart-title{font-size:13px;font-weight:600;color:var(--fg);margin-bottom:12px;text-align:center}
+  .ana-summary{display:flex;gap:12px;flex-wrap:wrap}
+  .ana-stat{flex:1;min-width:120px;padding:12px;background:var(--bg);border-radius:var(--r-m);border:1px solid var(--bdr-l);text-align:center}
+  .ana-stat-val{font-family:var(--fd);font-size:22px;font-weight:700;color:var(--accent)}
+  .ana-stat-lbl{font-size:10px;color:var(--fg3);margin-top:2px}
+
+  @media(max-width:900px){.ana-charts{grid-template-columns:1fr}}
+  @media(max-width:1200px){.gantt-row{flex-direction:column}.gantt-row .status-side{width:100%}}
+  @media(max-width:1024px){.sg2{grid-template-columns:1fr}.main{padding:12px}.header{padding:10px 14px}}
+  @media(max-width:768px){.fr{flex-direction:column}.fg{min-width:100%}}
+  .text-muted{color:var(--fg3)}.text-sm{font-size:10px}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <div class="header-logo"><i class="fas fa-gamepad"></i></div>
+    <div>
+      <div class="header-title-wrap" onclick="editShopName()" title="点击修改店铺名称">
+        <span class="header-title" id="shopNameDisplay">GameZone</span>
+        <i class="fas fa-pen" style="font-size:10px;color:var(--fg3)"></i>
+      </div>
+      <input type="text" class="header-title-edit" id="shopNameInput" value="GameZone" onblur="saveShopName()" onkeydown="if(event.key==='Enter')saveShopName()">
+      <div class="header-sub">电玩店智能排房系统</div>
+    </div>
+  </div>
+  <div class="header-right"><div><div class="header-clock" id="clock">--:--:--</div><div class="header-date" id="dateDisplay">----年--月--日</div></div></div>
+</header>
+
+<main class="main">
+
+  <!-- 1. Check-in + Reservation -->
+  <div class="sg2">
+    <div class="card">
+      <div class="card-hd"><div class="card-hd-l"><div class="ci o"><i class="fas fa-user-check"></i></div><span class="ct">现场接待</span></div></div>
+      <div class="card-bd">
+        <div class="fr">
+          <div class="fg"><label class="fl">选择包间</label><select class="fs" id="ckRoom"><option value="">请选择包间</option></select></div>
+          <div class="fg"><label class="fl">游玩设备</label><select class="fs" id="ckDev" onchange="onDevChange()"><option value="">请选择设备</option></select></div>
+          <div class="fg n"><label class="fl">人数</label><input type="number" class="fi" id="ckPeople" min="1" value="1"></div>
+          <div class="fg n" id="ctrlSizeGrp" style="display:none"><label class="fl">手柄</label>
+            <div class="cgt"><button class="cgb active" data-size="small" onclick="setCtrlSize('small')">小</button><button class="cgb" data-size="large" onclick="setCtrlSize('large')">大</button></div>
+          </div>
+        </div>
+        <div class="fr">
+          <div class="fg n"><label class="fl">时长</label><select class="fs" id="ckDur"><option value="0.5">0.5h</option><option value="1" selected>1h</option><option value="1.5">1.5h</option><option value="2">2h</option><option value="2.5">2.5h</option><option value="3">3h</option><option value="4">4h</option><option value="5">5h</option><option value="6">6h</option><option value="8">8h</option><option value="10">10h</option><option value="12">12h</option></select></div>
+          <div class="fg n"><label class="fl">开始时间</label><input type="time" class="fi" id="ckStart" step="60"></div>
+          <div class="fg n"><label class="fl">结束时间</label><input type="time" class="fi" id="ckEnd" readonly style="background:#F8F9FC;cursor:default"></div>
+          <div class="fg" style="flex:0 0 auto"><label class="fl">&nbsp;</label><button class="btn btn-p" onclick="handleCheckin()"><i class="fas fa-plus"></i> 开始接待</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><div class="card-hd-l"><div class="ci b"><i class="fas fa-phone-alt"></i></div><span class="ct">电话预约</span></div></div>
+      <div class="card-bd">
+        <div class="fr">
+          <div class="fg"><label class="fl">选择包间</label><select class="fs" id="rvRoom"><option value="">请选择包间</option></select></div>
+          <div class="fg"><label class="fl">游玩设备</label><select class="fs" id="rvDev"><option value="">请选择设备</option></select></div>
+          <div class="fg n"><label class="fl">人数</label><input type="number" class="fi" id="rvPeople" min="1" value="1"></div>
+          <div class="fg n"><label class="fl">电话</label><input type="tel" class="fi" id="rvPhone" placeholder="手机号"></div>
+        </div>
+        <div class="fr">
+          <div class="fg n"><label class="fl">预约日期</label><input type="date" class="fi" id="rvDate"></div>
+          <div class="fg n"><label class="fl">到店时间</label><input type="time" class="fi" id="rvStart" step="60"></div>
+          <div class="fg n"><label class="fl">时长</label><select class="fs" id="rvDur"><option value="0.5">0.5h</option><option value="1" selected>1h</option><option value="1.5">1.5h</option><option value="2">2h</option><option value="2.5">2.5h</option><option value="3">3h</option><option value="4">4h</option><option value="5">5h</option><option value="6">6h</option><option value="8">8h</option><option value="10">10h</option><option value="12">12h</option></select></div>
+          <div class="fg n"><label class="fl">结束时间</label><input type="time" class="fi" id="rvEnd" readonly style="background:#F8F9FC;cursor:default"></div>
+          <div class="fg" style="flex:0 0 auto"><label class="fl">&nbsp;</label><button class="btn btn-i" onclick="handleReserve()"><i class="fas fa-calendar-plus"></i> 添加预约</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shared date bar -->
+  <div style="display:flex;gap:8px;align-items:center;justify-content:flex-end;padding:0 4px;margin-bottom:12px">
+    <button class="btn btn-s btn-sm" onclick="sharedDatePrev()"><i class="fas fa-chevron-left"></i></button>
+    <input type="date" class="fi" id="sessDate" style="width:140px" onchange="onSharedDateChange()">
+    <button class="btn btn-s btn-sm" onclick="sharedDateNext()"><i class="fas fa-chevron-right"></i></button>
+    <button class="btn btn-s btn-sm" onclick="sharedDateToday()">今天</button>
+    <button class="btn btn-s btn-sm" onclick="document.getElementById('sessDate').value='';onSharedDateChange()">全部</button>
+  </div>
+
+  <!-- 2. Gantt + Status side panel -->
+  <div class="gantt-row">
+    <div class="gantt-main card">
+      <div class="card-hd"><div class="card-hd-l"><div class="ci b"><i class="fas fa-chart-gantt"></i></div><span class="ct">包间时间轴</span></div>
+        <div class="lg"><div class="li"><div class="ld active"></div>进行中</div><div class="li"><div class="ld reserved"></div>已预约</div><div class="li"><div class="ld ended"></div>已结束</div></div>
+      </div>
+      <div class="card-bd" style="padding:10px 16px"><div class="gw" id="ganttW"></div><div class="es" id="ganttE" style="display:none"><i class="fas fa-chart-gantt"></i><p>请先添加包间</p></div></div>
+    </div>
+    <div class="status-side">
+      <div class="card"><div class="card-hd"><div class="card-hd-l"><div class="ci r"><i class="fas fa-gamepad"></i></div><span class="ct">手柄库存</span></div></div><div class="sc" id="ctrlStatus"></div></div>
+      <div class="card"><div class="card-hd"><div class="card-hd-l"><div class="ci g"><i class="fas fa-desktop"></i></div><span class="ct">设备状态</span></div></div><div class="sc" id="deviceStatus"></div></div>
+    </div>
+  </div>
+
+  <!-- 3. Session Lists -->
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div class="card">
+      <div class="card-hd"><div class="card-hd-l"><div class="ci g2"><i class="fas fa-play-circle"></i></div><span class="ct">进行中</span><span class="badge active" id="activeCnt">0</span></div></div>
+      <div class="card-bd"><div class="sll" id="activeList"></div><div class="es" id="activeE" style="display:none"><i class="fas fa-play-circle"></i><p>暂无进行中的场次</p></div></div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><div class="card-hd-l"><div class="ci p"><i class="fas fa-calendar-check"></i></div><span class="ct">已预约</span><span class="badge reserved" id="reservedCnt">0</span></div></div>
+      <div class="card-bd"><div class="sll" id="reservedList"></div><div class="es" id="reservedE" style="display:none"><i class="fas fa-calendar-check"></i><p>暂无预约</p></div></div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><div class="card-hd-l"><div class="ci r2"><i class="fas fa-stop-circle"></i></div><span class="ct">已结束</span><span class="badge ended" id="endedCnt">0</span></div></div>
+      <div class="card-bd"><div class="sll" id="endedList"></div><div class="es" id="endedE" style="display:none"><i class="fas fa-stop-circle"></i><p>暂无已结束的场次</p></div></div>
+    </div>
+  </div>
+
+  <!-- 4. Room Management -->
+  <div class="card">
+    <div class="card-hd"><div class="card-hd-l"><div class="ci y"><i class="fas fa-door-open"></i></div><span class="ct">包间管理</span></div></div>
+    <div class="card-bd">
+      <div class="rc"><div class="rc-hd"><div class="rc-t hall"><i class="fas fa-users"></i> 大厅</div><button class="btn btn-s btn-sm" onclick="openRoomM('hall')"><i class="fas fa-plus"></i> 添加</button></div><div class="tl" id="hallTags"></div></div>
+      <div class="rc"><div class="rc-hd"><div class="rc-t booth"><i class="fas fa-couch"></i> 卡座</div><button class="btn btn-s btn-sm" onclick="openRoomM('booth')"><i class="fas fa-plus"></i> 添加</button></div><div class="tl" id="boothTags"></div></div>
+      <div class="rc"><div class="rc-hd"><div class="rc-t private"><i class="fas fa-door-closed"></i> 包间</div><button class="btn btn-s btn-sm" onclick="openRoomM('private')"><i class="fas fa-plus"></i> 添加</button></div><div class="tl" id="privateTags"></div></div>
+    </div>
+  </div>
+
+  <!-- 5. Device Management -->
+  <div class="card">
+    <div class="card-hd"><div class="card-hd-l"><div class="ci g"><i class="fas fa-desktop"></i></div><span class="ct">设备管理</span></div></div>
+    <div class="card-bd">
+      <div class="dev-cat"><div class="dev-cat-hd"><div class="dev-cat-t ps5"><i class="fab fa-playstation"></i> PS5 <span class="dev-count" id="ps5Count"></span></div><button class="btn btn-s btn-sm" onclick="openDevM('ps5')"><i class="fas fa-plus"></i> 添加</button></div><div class="tl" id="ps5Tags"></div></div>
+      <div class="dev-cat"><div class="dev-cat-hd"><div class="dev-cat-t switch"><i class="fas fa-gamepad"></i> Switch <span class="dev-count" id="switchCount"></span></div><button class="btn btn-s btn-sm" onclick="openDevM('switch')"><i class="fas fa-plus"></i> 添加</button></div><div class="tl" id="switchTags"></div></div>
+      <div class="dev-cat"><div class="dev-cat-hd"><div class="dev-cat-t racing"><i class="fas fa-flag-checkered"></i> 赛车 <span class="dev-count" id="racingCount"></span></div><button class="btn btn-s btn-sm" onclick="openDevM('racing')"><i class="fas fa-plus"></i> 添加</button></div><div class="tl" id="racingTags"></div></div>
+      <div class="dev-cat"><div class="dev-cat-hd"><div class="dev-cat-t movie"><i class="fas fa-film"></i> 观影 <span class="dev-count" id="movieCount"></span></div><button class="btn btn-s btn-sm" onclick="openDevM('movie')"><i class="fas fa-plus"></i> 添加</button></div><div class="tl" id="movieTags"></div></div>
+    </div>
+  </div>
+
+  <!-- 6. History Data -->
+  <div class="card">
+    <div class="card-hd">
+      <div class="card-hd-l"><div class="ci b"><i class="fas fa-history"></i></div><span class="ct">历史数据</span></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-s btn-sm" onclick="histPrev()"><i class="fas fa-chevron-left"></i></button>
+        <span class="ct" id="histMonth" style="min-width:100px;text-align:center"></span>
+        <button class="btn btn-s btn-sm" onclick="histNext()"><i class="fas fa-chevron-right"></i></button>
+        <button class="btn btn-s btn-sm" onclick="histToday()">今天</button>
+        <button class="btn btn-p btn-sm" onclick="exportHistCSV()"><i class="fas fa-download"></i> 导出</button>
+      </div>
+    </div>
+    <div class="card-bd">
+      <!-- Calendar -->
+      <div class="cal-grid" id="histCal"></div>
+      <!-- Export options -->
+      <div class="hist-export-opts" id="histExportOpts" style="display:none">
+        <div class="fr">
+          <div class="fg n"><label class="fl">起始日期</label><input type="date" class="fi" id="histExpStart"></div>
+          <div class="fg n"><label class="fl">结束日期</label><input type="date" class="fi" id="histExpEnd"></div>
+          <div class="fg n"><label class="fl">快捷</label>
+            <select class="fs" id="histExpQuick" onchange="onHistQuick()">
+              <option value="">自定义</option>
+              <option value="day">当天</option>
+              <option value="week">本周</option>
+              <option value="month">本月</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:6px;align-items:flex-end">
+            <button class="btn btn-p btn-sm" onclick="doExportHist()"><i class="fas fa-file-csv"></i> 导出CSV</button>
+            <button class="btn btn-s btn-sm" onclick="document.getElementById('histExportOpts').style.display='none'">取消</button>
+          </div>
+        </div>
+      </div>
+      <!-- Day data table -->
+      <div id="histTableWrap" style="display:none">
+        <div class="hist-table-title" id="histTableTitle"></div>
+        <div class="htw"><table class="ht" id="histTable"><thead><tr>
+          <th>包间类型</th><th>包间名称</th><th>游玩时长</th><th>开始时间</th><th>结束时间</th><th>游玩设备</th><th>人数</th><th>电话</th>
+        </tr></thead><tbody id="histTbody"></tbody></table></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. Data Analysis -->
+  <div class="card">
+    <div class="card-hd">
+      <div class="card-hd-l"><div class="ci o"><i class="fas fa-chart-bar"></i></div><span class="ct">数据分析</span></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="fg n" style="min-width:140px"><label class="fl">开始日期</label><input type="date" class="fi" id="anaStart"></div>
+        <div class="fg n" style="min-width:140px"><label class="fl">结束日期</label><input type="date" class="fi" id="anaEnd"></div>
+        <button class="btn btn-p btn-sm" onclick="runAnalysis()"><i class="fas fa-search"></i> 分析</button>
+        <button class="btn btn-s btn-sm" onclick="exportAnaCSV()"><i class="fas fa-download"></i> 导出</button>
+      </div>
+    </div>
+    <div class="card-bd">
+      <div class="ana-charts" id="anaCharts" style="display:none">
+        <div class="ana-chart-box"><div class="ana-chart-title">包间使用率</div><canvas id="roomChart"></canvas></div>
+        <div class="ana-chart-box"><div class="ana-chart-title">设备使用率</div><canvas id="devChart"></canvas></div>
+      </div>
+      <div class="ana-summary" id="anaSummary"></div>
+      <div class="es" id="anaE"><i class="fas fa-chart-bar"></i><p>选择日期区间后点击"分析"查看数据</p></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Modals -->
+<div class="mo" id="roomMo"><div class="md"><div class="mt" id="roomMt">添加包间</div><div class="fg" style="margin-bottom:14px"><label class="fl">名称</label><input type="text" class="fi" id="roomMi" placeholder="请输入名称"></div><div class="ma"><button class="btn btn-s" onclick="closeRoomM()">取消</button><button class="btn btn-p" onclick="confirmRoomM()">确认</button></div></div></div>
+<div class="mo" id="devMo"><div class="md"><div class="mt" id="devMt">添加设备</div><div class="fg" style="margin-bottom:14px"><label class="fl">设备名称</label><input type="text" class="fi" id="devMi" placeholder="例如：100号机"></div><div class="ma"><button class="btn btn-s" onclick="closeDevM()">取消</button><button class="btn btn-p" onclick="confirmDevM()">确认</button></div></div></div>
+<div class="mo" id="ctrlMo"><div class="md"><div class="mt">设置手柄数量</div><div class="fg" style="margin-bottom:14px"><label class="fl" id="ctrlMl">手柄</label><input type="number" class="fi" id="ctrlMq" min="0" value="0"></div><div class="ma"><button class="btn btn-s" onclick="closeCtrlM()">取消</button><button class="btn btn-p" onclick="confirmCtrlM()">确认</button></div></div></div>
+<div class="mo" id="editMo"><div class="md"><div class="mt">编辑场次</div>
+  <div class="fg" style="margin-bottom:10px"><label class="fl">包间</label><select class="fs" id="edRoom"></select></div>
+  <div class="fg" style="margin-bottom:10px"><label class="fl">设备</label><select class="fs" id="edDev"></select></div>
+  <div class="fr" style="margin-bottom:0"><div class="fg"><label class="fl">开始时间</label><input type="time" class="fi" id="edStart" step="60"></div><div class="fg"><label class="fl">结束时间</label><input type="time" class="fi" id="edEnd" step="60"></div><div class="fg n"><label class="fl">人数</label><input type="number" class="fi" id="edPeople" min="1" value="1"></div></div>
+  <div class="fr" style="margin-top:10px;margin-bottom:0"><div class="fg n"><label class="fl">手柄数量</label><input type="number" class="fi" id="edCtrlCount" min="0" value="0" placeholder="0=按人数"></div><div class="fg n" id="edCtrlSizeGrp" style="display:none"><label class="fl">手柄大小</label>
+    <div class="cgt"><button class="cgb" data-size="small" onclick="setEditCtrlSize('small')">小</button><button class="cgb" data-size="large" onclick="setEditCtrlSize('large')">大</button></div>
+  </div></div>
+  <div class="fg" style="margin-top:10px;margin-bottom:0"><label class="fl">状态</label><select class="fs" id="edStatus"><option value="active">进行中</option><option value="reserved">已预约</option><option value="ended">已结束</option></select></div>
+  <div class="fg" style="margin-top:10px;margin-bottom:0"><label class="fl">电话</label><input type="tel" class="fi" id="edPhone" placeholder="客户电话"></div>
+  <div class="ma"><button class="btn btn-s" onclick="closeEditM()">取消</button><button class="btn btn-p" onclick="saveEdit()">保存</button></div></div></div>
+
+<div class="tc" id="toastC"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const SB_URL='https://gbwavxzwmjnyonqjmfib.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdid2F2eHp3bWpueW9ucWptZmliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NTIyNzgsImV4cCI6MjA5NDIyODI3OH0.Rg6OCXeQZAQ27w-p5XbtsYucbQ3o6rMnkb9lto0dJtw';
+let sb=null;
+try{if(window.supabase&&window.supabase.createClient)sb=window.supabase.createClient(SB_URL,SB_KEY);}catch(e){console.warn('Supabase SDK not loaded:',e);}
+
+const SK='gamezone_v7';
+const DEF={
+  shopName:'GameZone',
+  rooms:{hall:['大厅A','大厅B'],booth:['卡座1','卡座2','卡座3'],private:['VIP-01','VIP-02','VIP-03']},
+  devices:{ps5:['100号机','200号机','300号机'],switch:['Switch-1','Switch-2','Switch-3','Switch-4'],racing:['赛车-1','赛车-2'],movie:['影厅A','影厅B']},
+  controllers:{ps5:8,switch_small:10,switch_large:6},
+  sessions:[]
+};
+let S=JSON.parse(JSON.stringify(DEF)),selCS='small',editCK=null,editDK=null,editSK=null,editCS='small';
+
+function migrateV6(data){
+  const today=new Date();
+  const ds=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  (data.sessions||[]).forEach(s=>{if(!s.date)s.date=ds;});
+  return data;
+}
+
+async function load(){
+  if(sb){
+    try{
+      const[shopRes,roomsRes,devsRes,ctrlRes,sessRes]=await Promise.all([
+        sb.from('shop').select('*').eq('id',1).single(),
+        sb.from('rooms').select('*').order('id'),
+        sb.from('devices').select('*').order('id'),
+        sb.from('controllers').select('*'),
+        sb.from('sessions').select('*')
+      ]);
+      const d={
+        shopName:shopRes.data?.name||DEF.shopName,
+        rooms:{hall:[],booth:[],private:[]},
+        devices:{ps5:[],switch:[],racing:[],movie:[]},
+        controllers:{},
+        sessions:(sessRes.data||[]).map(s=>({
+          id:s.id,status:s.status,room:s.room,device:s.device,devCat:s.dev_cat,
+          startTime:s.start_time,endTime:s.end_time,duration:s.duration,
+          phone:s.phone,people:s.people,ctrlSize:s.ctrl_size,ctrlCount:s.ctrl_count,date:s.date
+        }))
+      };
+      (roomsRes.data||[]).forEach(r=>{if(d.rooms[r.category])d.rooms[r.category].push(r.name);});
+      (devsRes.data||[]).forEach(dv=>{if(d.devices[dv.category])d.devices[dv.category].push(dv.name);});
+      (ctrlRes.data||[]).forEach(c=>{d.controllers[c.type]=c.count;});
+      if(!d.sessions[0]?.date)migrateV6(d);
+      return d;
+    }catch(e){console.warn('Supabase load failed:',e);}
+  }
+  try{const r=localStorage.getItem(SK);if(r){const p=JSON.parse(r);const d={shopName:p.shopName||DEF.shopName,rooms:p.rooms||DEF.rooms,devices:p.devices||DEF.devices,controllers:p.controllers||DEF.controllers,sessions:p.sessions||[]};if(!p.sessions||!p.sessions[0]||!p.sessions[0].date){migrateV6(d);}return d;}}catch(e){}
+  return JSON.parse(JSON.stringify(DEF));
+}
+async function save(){
+  localStorage.setItem(SK,JSON.stringify(S));
+  if(sb){
+    try{
+      await sb.from('shop').upsert({id:1,name:S.shopName});
+      await sb.from('rooms').delete().neq('id',0);
+      const roomRows=[];
+      for(const[cat,names]of Object.entries(S.rooms))names.forEach((n,i)=>roomRows.push({id:roomRows.length+1,category:cat,name:n}));
+      if(roomRows.length)await sb.from('rooms').insert(roomRows);
+      await sb.from('devices').delete().neq('id',0);
+      const devRows=[];
+      for(const[cat,names]of Object.entries(S.devices))names.forEach((n,i)=>devRows.push({id:devRows.length+1,category:cat,name:n}));
+      if(devRows.length)await sb.from('devices').insert(devRows);
+      await sb.from('controllers').delete().neq('type','');
+      const ctrlRows=Object.entries(S.controllers).map(([type,count])=>({type,count}));
+      if(ctrlRows.length)await sb.from('controllers').insert(ctrlRows);
+      await sb.from('sessions').delete().neq('id','');
+      const sessRows=S.sessions.map(s=>({
+        id:s.id,status:s.status,room:s.room,device:s.device,dev_cat:s.devCat,
+        start_time:s.startTime,end_time:s.endTime,duration:s.duration,
+        phone:s.phone,people:s.people,ctrl_size:s.ctrlSize,ctrl_count:s.ctrlCount,date:s.date
+      }));
+      if(sessRows.length)await sb.from('sessions').insert(sessRows);
+    }catch(e){console.warn('Supabase save failed:',e);}
+  }
+}
+
+function t2m(t){const[h,m]=t.split(':').map(Number);return h*60+m;}
+function m2t(m){return`${String(Math.floor(m/60)%24).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;}
+function nowS(){const n=new Date();return`${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`;}
+function addM(t,d){return m2t(t2m(t)+Math.round(d*60));}
+function gid(){return Date.now().toString(36)+Math.random().toString(36).substr(2,5);}
+function allRooms(){const a=[];['hall','booth','private'].forEach(c=>{(S.rooms[c]||[]).forEach(n=>a.push({name:n,cat:c}));});return a;}
+function privateRooms(){return(S.rooms.private||[]).map(n=>({name:n,cat:'private'}));}
+
+function allDevs(){const a=[];['ps5','switch','racing','movie'].forEach(c=>{(S.devices[c]||[]).forEach(n=>a.push({name:n,cat:c}));});return a;}
+function devInUse(dn){return S.sessions.filter(s=>s.device===dn&&s.status==='active').length;}
+function devAvail(dn){const d=allDevs().find(x=>x.name===dn);if(!d)return 0;if(d.cat==='movie')return 1;return 1-devInUse(dn);}
+
+// Get effective ctrl count for a session (manual override or auto from people)
+function getEffCtrlCount(s){if(s.ctrlCount!==undefined&&s.ctrlCount!==null&&s.ctrlCount>=0)return s.ctrlCount;return s.people||0;}
+
+// Controller usage
+function ctrlInUse(key){return S.sessions.filter(s=>{if(s.status!=='active')return false;const cnt=getEffCtrlCount(s);if(cnt<=0)return false;if(key==='ps5'&&s.devCat==='ps5')return true;if(key==='switch_small'&&s.devCat==='switch'&&s.ctrlSize==='small')return true;if(key==='switch_large'&&s.devCat==='switch'&&s.ctrlSize==='large')return true;return false;}).reduce((s,x)=>s+getEffCtrlCount(x),0);}
+function ctrlAvail(key){return(S.controllers[key]||0)-ctrlInUse(key);}
+function calcCtrl(devCat,people,cs){if(devCat==='ps5')return{key:'ps5',count:people,label:'PS5手柄'};if(devCat==='switch')return{key:cs==='large'?'switch_large':'switch_small',count:people,label:cs==='large'?'Switch大手柄':'Switch小手柄'};return{key:null,count:0,label:''};}
+
+// Format ctrl info for display
+function formatCtrlInfo(s){if(!s.devCat||s.status!=='active')return'';const cnt=getEffCtrlCount(s);if(cnt<=0)return'';if(s.devCat==='ps5')return cnt+'柄';if(s.devCat==='switch')return cnt+(s.ctrlSize==='large'?'大':'小');return'';}
+
+function toast(m,t='info'){const c=document.getElementById('toastC'),e=document.createElement('div');e.className=`tt ${t}`;const i={success:'fa-check-circle',error:'fa-exclamation-circle',info:'fa-info-circle'};e.innerHTML=`<i class="fas ${i[t]||i.info}"></i> ${m}`;c.appendChild(e);setTimeout(()=>e.remove(),3000);}
+
+function editShopName(){const d=document.getElementById('shopNameDisplay'),i=document.getElementById('shopNameInput');d.style.display='none';i.classList.add('active');i.value=S.shopName;i.focus();i.select();}
+async function saveShopName(){const d=document.getElementById('shopNameDisplay'),i=document.getElementById('shopNameInput');const v=i.value.trim();if(v){S.shopName=v;await save();}d.textContent=S.shopName;d.style.display='';i.classList.remove('active');}
+
+// Room Modal
+function openRoomM(c){editCK=c;const t={hall:'大厅',booth:'卡座',private:'包间'};document.getElementById('roomMt').textContent=`添加${t[c]}`;document.getElementById('roomMi').value='';document.getElementById('roomMo').classList.add('active');setTimeout(()=>document.getElementById('roomMi').focus(),100);}
+function closeRoomM(){document.getElementById('roomMo').classList.remove('active');editCK=null;}
+async function confirmRoomM(){const n=document.getElementById('roomMi').value.trim();if(!n){toast('请输入名称','error');return;}if(!S.rooms[editCK])S.rooms[editCK]=[];if(S.rooms[editCK].includes(n)){toast('已存在','error');return;}S.rooms[editCK].push(n);await save();toast(`已添加「${n}」`,'success');closeRoomM();renderAll();}
+document.getElementById('roomMi').addEventListener('keydown',e=>{if(e.key==='Enter')confirmRoomM();if(e.key==='Escape')closeRoomM();});
+document.getElementById('roomMo').addEventListener('click',e=>{if(e.target===e.currentTarget)closeRoomM();});
+
+// Device Modal
+function openDevM(c){editDK=c;const t={ps5:'PS5',switch:'Switch',racing:'赛车',movie:'观影'};document.getElementById('devMt').textContent=`添加${t[c]}设备`;document.getElementById('devMi').value='';document.getElementById('devMo').classList.add('active');setTimeout(()=>document.getElementById('devMi').focus(),100);}
+function closeDevM(){document.getElementById('devMo').classList.remove('active');editDK=null;}
+async function confirmDevM(){const n=document.getElementById('devMi').value.trim();if(!n){toast('请输入名称','error');return;}if(!S.devices[editDK])S.devices[editDK]=[];if(S.devices[editDK].includes(n)){toast('已存在','error');return;}S.devices[editDK].push(n);await save();toast(`已添加「${n}」`,'success');closeDevM();renderAll();}
+document.getElementById('devMi').addEventListener('keydown',e=>{if(e.key==='Enter')confirmDevM();if(e.key==='Escape')closeDevM();});
+document.getElementById('devMo').addEventListener('click',e=>{if(e.target===e.currentTarget)closeDevM();});
+
+// Controller Modal
+function openCtrlM(k){editSK=k;const l={ps5:'PS5手柄',switch_small:'Switch小手柄',switch_large:'Switch大手柄'};document.getElementById('ctrlMl').textContent=l[k]||k;document.getElementById('ctrlMq').value=S.controllers[k]||0;document.getElementById('ctrlMo').classList.add('active');setTimeout(()=>document.getElementById('ctrlMq').focus(),100);}
+function closeCtrlM(){document.getElementById('ctrlMo').classList.remove('active');editSK=null;}
+async function confirmCtrlM(){const q=parseInt(document.getElementById('ctrlMq').value)||0;if(q<0){toast('不能为负','error');return;}S.controllers[editSK]=q;await save();toast('已更新','success');closeCtrlM();renderAll();}
+document.getElementById('ctrlMq').addEventListener('keydown',e=>{if(e.key==='Enter')confirmCtrlM();if(e.key==='Escape')closeCtrlM();});
+document.getElementById('ctrlMo').addEventListener('click',e=>{if(e.target===e.currentTarget)closeCtrlM();});
+
+function setCtrlSize(s){selCS=s;document.querySelectorAll('#ctrlSizeGrp .cgb').forEach(b=>{b.classList.toggle('active',b.dataset.size===s);});}
+function setEditCtrlSize(s){editCS=s;document.querySelectorAll('#edCtrlSizeGrp .cgb').forEach(b=>{b.classList.toggle('active',b.dataset.size===s);});}
+function onDevChange(){const d=allDevs().find(x=>x.name===document.getElementById('ckDev').value);document.getElementById('ctrlSizeGrp').style.display=(d&&d.cat==='switch')?'flex':'none';}
+
+// Edit Session
+let editSid=null;
+function openEditM(id){const s=S.sessions.find(x=>x.id===id);if(!s)return;editSid=id;
+  document.getElementById('edRoom').innerHTML=allRooms().map(r=>`<option value="${r.name}" ${r.name===s.room?'selected':''}>${r.name}</option>`).join('');
+  document.getElementById('edDev').innerHTML='<option value="">无设备</option>'+allDevs().map(d=>`<option value="${d.name}" ${d.name===s.device?'selected':''}>${d.name}</option>`).join('');
+  document.getElementById('edStart').value=s.startTime;document.getElementById('edEnd').value=s.endTime;document.getElementById('edStatus').value=s.status||'active';document.getElementById('edPeople').value=s.people||1;document.getElementById('edPhone').value=s.phone||'';
+  // Ctrl count: 0 or undefined means auto
+  document.getElementById('edCtrlCount').value=(s.ctrlCount!==undefined&&s.ctrlCount!==null)?s.ctrlCount:'';
+  document.getElementById('edCtrlCount').placeholder='0=按人数自动';
+  // Ctrl size
+  editCS=s.ctrlSize||'small';
+  document.querySelectorAll('#edCtrlSizeGrp .cgb').forEach(b=>{b.classList.toggle('active',b.dataset.size===editCS);});
+  const dv=allDevs().find(x=>x.name===s.device);
+  document.getElementById('edCtrlSizeGrp').style.display=(dv&&dv.cat==='switch')?'flex':'none';
+  document.getElementById('editMo').classList.add('active');}
+function closeEditM(){document.getElementById('editMo').classList.remove('active');editSid=null;}
+async function saveEdit(){if(!editSid)return;const s=S.sessions.find(x=>x.id===editSid);if(!s)return;
+  const nr=document.getElementById('edRoom').value,nd=document.getElementById('edDev').value,ns=document.getElementById('edStart').value,ne=document.getElementById('edEnd').value,nst=document.getElementById('edStatus').value,np=parseInt(document.getElementById('edPeople').value)||1,nph=document.getElementById('edPhone').value.trim();
+  const ctrlCountRaw=document.getElementById('edCtrlCount').value;
+  const ctrlCount=ctrlCountRaw===''?undefined:parseInt(ctrlCountRaw);
+  if(chkConflict(nr,ns,ne,editSid)){toast(`包间「${nr}」已被占用`,'error');return;}
+  // Controller check for active
+  if(nst==='active'&&nd){const dv=allDevs().find(x=>x.name===nd);const dc=dv?dv.cat:'';const cs=(dc==='switch')?editCS:'';
+    const effCount=(ctrlCount!==undefined&&ctrlCount>=0)?ctrlCount:np;
+    const cn=calcCtrl(dc,effCount,cs);
+    if(cn.key&&ctrlAvail(cn.key)<effCount){toast(`${cn.label}不足 (需${effCount}个，余${ctrlAvail(cn.key)}个)`,'error');return;}}
+  s.room=nr;s.device=nd;s.devCat=nd?(allDevs().find(x=>x.name===nd)||{}).cat||'':'';s.startTime=ns;s.endTime=ne;s.status=nst;s.people=np;s.phone=nph;
+  s.ctrlCount=ctrlCount;s.ctrlSize=(allDevs().find(x=>x.name===nd)||{}).cat==='switch'?editCS:'';
+  await save();toast('已保存','success');closeEditM();renderAll();}
+document.getElementById('editMo').addEventListener('click',e=>{if(e.target===e.currentTarget)closeEditM();});
+
+async function rmRoom(n){for(const c of['hall','booth','private']){const i=(S.rooms[c]||[]).indexOf(n);if(i>-1){S.rooms[c].splice(i,1);break;}}S.sessions=S.sessions.filter(s=>s.room!==n);await save();toast(`「${n}」已删除`,'info');renderAll();}
+async function rmDev(n){S.sessions.forEach(s=>{if(s.device===n){s.device='';s.devCat='';}});for(const c of['ps5','switch','racing','movie']){const i=(S.devices[c]||[]).indexOf(n);if(i>-1){S.devices[c].splice(i,1);break;}}await save();toast(`设备「${n}」已删除`,'info');renderAll();}
+
+function renderRoomTags(){['hall','booth','private'].forEach(c=>{const el=document.getElementById(`${c}Tags`),rms=S.rooms[c]||[];const ic={hall:'users',booth:'couch',private:'door-closed'},cl={hall:'var(--c-hall)',booth:'var(--c-booth)',private:'var(--c-pvt)'};
+  el.innerHTML=rms.map(r=>`<div class="tg"><i class="fas fa-${ic[c]}" style="color:${cl[c]};font-size:10px"></i><span>${r}</span><button class="tx" onclick="rmRoom('${r}')"><i class="fas fa-times"></i></button></div>`).join('');});}
+
+function renderDevTags(){const cats=['ps5','switch','racing','movie'];const ic={ps5:'fab fa-playstation',switch:'fas fa-gamepad',racing:'fas fa-flag-checkered',movie:'fas fa-film'};
+  cats.forEach(c=>{const el=document.getElementById(`${c}Tags`),devs=S.devices[c]||[];document.getElementById(`${c}Count`).textContent=`(${devs.length}台)`;
+    el.innerHTML=devs.map(d=>{const iu=devInUse(d);return`<div class="tg"><i class="${ic[c]}" style="font-size:10px;color:${iu>0?'var(--err)':'var(--fg3)'}"></i><span>${d}</span>${iu>0?`<span class="text-sm text-muted">使用中</span>`:''}<button class="tx" onclick="rmDev('${d}')"><i class="fas fa-times"></i></button></div>`;}).join('');});}
+
+function populateSelects(){
+  const ar=allRooms(),ad=allDevs();
+  const ckR=document.getElementById('ckRoom'),rvR=document.getElementById('rvRoom'),ckD=document.getElementById('ckDev'),rvD=document.getElementById('rvDev');
+  const cv=ckR.value,rvv=rvR.value,dv=ckD.value,dv2=rvD.value;
+  ckR.innerHTML='<option value="">请选择包间</option>'+ar.map(r=>`<option value="${r.name}">${r.name}</option>`).join('');
+  rvR.innerHTML='<option value="0">任意包间（自动分配）</option>'+ar.map(r=>`<option value="${r.name}">${r.name}</option>`).join('');
+  const catLabels={ps5:'PS5',switch:'Switch',racing:'赛车',movie:'观影'};
+  let ckOpt='<option value="">请选择设备</option>',rvOpt='<option value="">请选择设备</option>';
+  ['ps5','switch','racing','movie'].forEach(c=>{const devs=S.devices[c]||[];if(!devs.length)return;
+    ckOpt+=`<optgroup label="${catLabels[c]}">`;rvOpt+=`<optgroup label="${catLabels[c]}">`;
+    devs.forEach(d=>{const av=devAvail(d);ckOpt+=`<option value="${d}" data-cat="${c}" ${av<=0?'disabled':''}>${d}${av<=0?' (已用完)':''}</option>`;rvOpt+=`<option value="${d}" data-cat="${c}">${d}</option>`;});
+    ckOpt+='</optgroup>';rvOpt+='</optgroup>';});
+  ckD.innerHTML=ckOpt;rvD.innerHTML=rvOpt;ckR.value=cv;rvR.value=rvv;ckD.value=dv;rvD.value=dv2;
+}
+
+async function handleCheckin(){
+  const room=document.getElementById('ckRoom').value,dev=document.getElementById('ckDev').value,dur=parseFloat(document.getElementById('ckDur').value),st=document.getElementById('ckStart').value,people=parseInt(document.getElementById('ckPeople').value)||1;
+  if(!room){toast('请选择包间','error');return;}if(!dev){toast('请选择设备','error');return;}if(!st){toast('请设置开始时间','error');return;}if(people<1){toast('人数不能少于1','error');return;}
+  if(devAvail(dev)<=0){toast(`设备「${dev}」已占用`,'error');return;}
+  const dv=allDevs().find(x=>x.name===dev);const dc=dv?dv.cat:'';
+  const cs=(dc==='switch')?selCS:'';
+  const cn=calcCtrl(dc,people,cs);
+  if(cn.key&&ctrlAvail(cn.key)<cn.count){toast(`${cn.label}不足 (需${cn.count}个，余${ctrlAvail(cn.key)}个)`,'error');return;}
+  const et=addM(st,dur);
+  if(chkConflict(room,st,et,null)){toast(`包间「${room}」已被占用`,'error');return;}
+  const todayDate=new Date();
+  const dateStr=`${todayDate.getFullYear()}-${String(todayDate.getMonth()+1).padStart(2,'0')}-${String(todayDate.getDate()).padStart(2,'0')}`;
+  S.sessions.push({id:gid(),status:'active',room,device:dev,devCat:dc,startTime:st,endTime:et,duration:dur,phone:'',people,ctrlSize:cs,ctrlCount:undefined,date:dateStr});
+  await save();toast(`「${room}」接待成功`,'success');renderAll();
+}
+
+async function handleReserve(){
+  let room=document.getElementById('rvRoom').value,dev=document.getElementById('rvDev').value,st=document.getElementById('rvStart').value,et=document.getElementById('rvEnd').value,phone=document.getElementById('rvPhone').value.trim(),people=parseInt(document.getElementById('rvPeople').value)||1,rvDate=document.getElementById('rvDate').value;
+  if(!rvDate){toast('请选择预约日期','error');return;}
+  if(!st){toast('请设置到店时间','error');return;}if(!et){toast('结束时间未生成','error');return;}if(!dev){toast('请选择设备','error');return;}
+  if(room==='0'){room=findAvail(st,et,rvDate);if(!room){toast('没有可用包间','error');return;}}else if(!room){toast('请选择包间','error');return;}
+  if(chkConflict(room,st,et,null,rvDate)){toast(`包间「${room}」在${rvDate}已被占用`,'error');return;}
+  const dv=allDevs().find(x=>x.name===dev);const dc=dv?dv.cat:'';
+  S.sessions.push({id:gid(),status:'reserved',room,device:dev,devCat:dc,startTime:st,endTime:et,duration:(t2m(et)-t2m(st))/60,phone,people,ctrlSize:'',ctrlCount:undefined,date:rvDate});
+  await save();toast(`「${room}」预约成功`,'success');renderAll();
+}
+
+// Only search private rooms for auto-assign
+function findAvail(st,et,date){for(const r of privateRooms()){if(!chkConflict(r.name,st,et,null,date))return r.name;}return null;}
+function chkConflict(room,st,et,exId,date){const sS=t2m(st),sE=t2m(et);return S.sessions.some(s=>{if(s.id===exId||s.room!==room)return false;if(date&&s.date!==date)return false;return sS<t2m(s.endTime)&&sE>t2m(s.startTime);});}
+
+async function rmSess(id){S.sessions=S.sessions.filter(s=>s.id!==id);await save();toast('已删除','info');renderAll();}
+async function clearAll(){if(!S.sessions.length){toast('暂无场次','info');return;}S.sessions=[];await save();toast('已清空','info');renderAll();}
+
+function autoEndSessions(){
+  const now=new Date(),todayStr=fmtDate(now),nowMin=now.getHours()*60+now.getMinutes();
+  let changed=false;
+  S.sessions.forEach(s=>{
+    if(s.status==='active'&&s.date===todayStr&&t2m(s.endTime)<=nowMin){s.status='ended';changed=true;}
+  });
+  if(changed){save();}
+}
+function renderSessItem(s){
+  const dur=s.duration||0;const durStr=dur>=1?dur+'h':Math.round(dur*60)+'min';
+  const ci=formatCtrlInfo(s);
+  return`<div class="sli ${s.status==='active'?'':s.status}"><div class="slf"><div class="slr">${s.room}</div><div class="sld">${s.date||'-'} · ${s.startTime} — ${s.endTime} · ${durStr}${s.device?' · '+s.device:''}${s.people?' · '+s.people+'人':''}${s.phone?' · '+s.phone:''}${ci?' · '+ci:''}</div></div><div class="sla"><button class="btn btn-s btn-ic btn-sm" onclick="openEditM('${s.id}')" title="编辑"><i class="fas fa-edit"></i></button><button class="btn btn-d btn-ic btn-sm" onclick="rmSess('${s.id}')" title="删除"><i class="fas fa-times"></i></button></div></div>`;
+}
+function renderSessLists(){
+  autoEndSessions();
+  const groups={active:[],reserved:[],ended:[]};
+  S.sessions.forEach(s=>{if(groups[s.status])groups[s.status].push(s);});
+  ['active','reserved','ended'].forEach(st=>{
+    const filterDate=document.getElementById('sessDate').value;
+    let list=groups[st];
+    if(filterDate)list=list.filter(s=>s.date===filterDate);
+    list.sort((a,b)=>a.date!==b.date?a.date.localeCompare(b.date):t2m(a.startTime)-t2m(b.startTime));
+    const el=document.getElementById(st+'List'),em=document.getElementById(st+'E'),cnt=document.getElementById(st+'Cnt');
+    cnt.textContent=groups[st].length;
+    if(!list.length){el.innerHTML='';em.style.display='block';return;}
+    em.style.display='none';
+    el.innerHTML=list.map(renderSessItem).join('');
+  });
+}
+
+function sharedDatePrev(){const el=document.getElementById('sessDate');if(!el.value)return;const d=new Date(el.value+'T00:00:00');d.setDate(d.getDate()-1);el.value=fmtDate(d);onSharedDateChange();}
+function sharedDateNext(){const el=document.getElementById('sessDate');if(!el.value)return;const d=new Date(el.value+'T00:00:00');d.setDate(d.getDate()+1);el.value=fmtDate(d);onSharedDateChange();}
+function sharedDateToday(){document.getElementById('sessDate').value=fmtDate(new Date());onSharedDateChange();}
+function onSharedDateChange(){renderGantt();renderSessLists();}
+function fmtDate(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+
+function renderGantt(){
+  const w=document.getElementById('ganttW'),em=document.getElementById('ganttE'),ar=allRooms();
+  if(!ar.length){w.innerHTML='';em.style.display='block';return;}em.style.display='none';
+  const ganttDate=document.getElementById('sessDate').value||fmtDate(new Date());
+  const daySess=S.sessions.filter(s=>s.date===ganttDate);
+  const sH=12,eH=24,rH=60,cats=[{key:'hall',label:'大厅'},{key:'booth',label:'卡座'},{key:'private',label:'包间'}];
+  let h='<div class="gc"><div class="ghr"><div class="gth">时间</div><div class="grh">';
+  cats.forEach(c=>{const rms=S.rooms[c.key]||[];if(!rms.length)return;h+=`<div class="gcg"><div class="gcl ${c.key}">${c.label}</div><div class="grls">`;rms.forEach(r=>{h+=`<div class="grl">${r}</div>`;});h+='</div></div>';});
+  h+='</div></div><div class="gb" style="position:relative">';
+  const now=new Date(),nM=now.getHours()*60+now.getMinutes(),rS=sH*60,rE=eH*60;let nO=0,sN=false;
+  if(ganttDate===fmtDate(now)&&nM>=rS&&nM<=rE){nO=((nM-rS)/60)*rH;sN=true;}
+  for(let hr=sH;hr<eH;hr++){h+=`<div class="gtr"><div class="gtl">${String(hr).padStart(2,'0')}:00</div><div class="gcr">`;cats.forEach(c=>{(S.rooms[c.key]||[]).forEach(()=>{h+='<div class="gce"></div>';});});h+='</div></div>';}
+  if(sN)h+=`<div class="gnl" style="top:${nO}px"><div class="gnd"></div></div>`;
+  const cm={};let ci2=0;cats.forEach(c=>{(S.rooms[c.key]||[]).forEach(r=>{cm[r]=ci2++;});});
+  daySess.forEach(s=>{const col=cm[s.room];if(col===undefined)return;const sS=t2m(s.startTime),sE=t2m(s.endTime),cS=Math.max(sS,rS),cE=Math.min(sE,rE);if(cS>=cE)return;
+    const top=((cS-rS)/60)*rH+2,bh=((cE-cS)/60)*rH-4,left=60+col*90+2;
+    const ci=formatCtrlInfo(s);
+    h+=`<div class="gbk ${s.status||'active'}" style="left:${left}px;width:86px;top:${top}px;height:${bh}px" onclick="openEditM('${s.id}')"><span class="gbk-t">${s.startTime}-${s.endTime}</span>${s.device?`<span class="gbk-d">${s.device}</span>`:''}${s.people?`<span class="gbk-p">${s.people}人</span>`:''}${s.phone?`<span class="gbk-ph">${s.phone.slice(-4)}</span>`:''}${ci?`<span class="gbk-c">${ci}</span>`:''}</div>`;});
+  h+='</div></div>';w.innerHTML=h;
+}
+
+function renderStatus(){
+  const catLabels={ps5:'PS5',switch:'Switch',racing:'赛车',movie:'观影'};
+  let devHtml='';
+  ['ps5','switch','racing','movie'].forEach(c=>{const devs=S.devices[c]||[];if(!devs.length)return;
+    devs.forEach(d=>{const iu=devInUse(d);let bc='fr',bt='空闲';if(iu>0){bc='iu';bt='使用中';}
+      devHtml+=`<div class="si"><div class="sl"><span class="sn">${d}</span><span class="sd">${catLabels[c]}</span></div><div class="sr"><span class="sb ${bc}">${bt}</span></div></div>`;});});
+  document.getElementById('deviceStatus').innerHTML=devHtml||'<div class="es" style="padding:8px"><p>暂无设备</p></div>';
+
+  const ctrls=[{key:'ps5',label:'PS5手柄'},{key:'switch_small',label:'Switch小手柄'},{key:'switch_large',label:'Switch大手柄'}];
+  document.getElementById('ctrlStatus').innerHTML=ctrls.map(c=>{const total=S.controllers[c.key]||0,iu=ctrlInUse(c.key),av=total-iu;let bc='fr',bt='空闲';
+    if(av<=0&&total>0){bc='ex';bt='已用完';}else if(iu>0){bc='iu';bt='使用中';}
+    return`<div class="ci2"><div class="sl"><span class="sn">${c.label}</span></div><div class="sr"><span class="sct"><span class="u">${iu}</span>/<span class="t">${total}</span></span><span class="sb ${bc}">${bt}</span><button class="ceb" onclick="openCtrlM('${c.key}')" title="设置数量"><i class="fas fa-pen"></i></button></div></div>`;}).join('');
+}
+
+function updateCkEnd(){const s=document.getElementById('ckStart').value,d=parseFloat(document.getElementById('ckDur').value);document.getElementById('ckEnd').value=(s&&d)?addM(s,d):'';}
+function updateRvEnd(){const s=document.getElementById('rvStart').value,d=parseFloat(document.getElementById('rvDur').value);document.getElementById('rvEnd').value=(s&&d)?addM(s,d):'';}
+document.getElementById('ckDur').addEventListener('change',updateCkEnd);
+document.getElementById('ckStart').addEventListener('change',updateCkEnd);
+document.getElementById('rvDur').addEventListener('change',updateRvEnd);
+document.getElementById('rvStart').addEventListener('change',updateRvEnd);
+
+function updateClock(){const n=new Date();document.getElementById('clock').textContent=`${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}:${String(n.getSeconds()).padStart(2,'0')}`;const days=['日','一','二','三','四','五','六'];document.getElementById('dateDisplay').textContent=`${n.getFullYear()}年${n.getMonth()+1}月${n.getDate()}日 星期${days[n.getDay()]}`;}
+
+function renderAll(){renderRoomTags();renderDevTags();populateSelects();renderSessLists();renderGantt();renderStatus();onDevChange();}
+
+/* ===== History Data ===== */
+let histYear, histMonth, histSelectedDate=null;
+
+function initHist(){const n=new Date();histYear=n.getFullYear();histMonth=n.getMonth();renderHistCal();}
+function histPrev(){histMonth--;if(histMonth<0){histMonth=11;histYear--;}renderHistCal();}
+function histNext(){histMonth++;if(histMonth>11){histMonth=0;histYear++;}renderHistCal();}
+function histToday(){const n=new Date();histYear=n.getFullYear();histMonth=n.getMonth();histSelectedDate=null;renderHistCal();}
+
+function renderHistCal(){
+  const mNames=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  document.getElementById('histMonth').textContent=`${histYear}年${mNames[histMonth]}`;
+  const first=new Date(histYear,histMonth,1),last=new Date(histYear,histMonth+1,0);
+  const startDay=first.getDay()||7; // Monday=1
+  const today=new Date(),todayStr=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  // Get dates that have data
+  const dataDates=new Set(S.sessions.map(s=>s.date).filter(Boolean));
+  let html='';
+  ['一','二','三','四','五','六','日'].forEach(d=>{html+=`<div class="cal-hd">${d}</div>`;});
+  // Previous month padding
+  const prevLast=new Date(histYear,histMonth,0).getDate();
+  for(let i=startDay-1;i>0;i--){html+=`<div class="cal-day other">${prevLast-i+1}</div>`;}
+  // Current month
+  for(let d=1;d<=last.getDate();d++){
+    const ds=`${histYear}-${String(histMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday=ds===todayStr,isSel=ds===histSelectedDate,hasData=dataDates.has(ds);
+    let cls='cal-day';
+    if(isToday)cls+=' today';
+    if(isSel)cls+=' selected';
+    if(hasData)cls+=' has-data';
+    html+=`<div class="${cls}" onclick="selectHistDate('${ds}')">${d}</div>`;
+  }
+  // Next month padding
+  const totalCells=startDay-1+last.getDate();
+  const remaining=7-totalCells%7;
+  if(remaining<7){for(let i=1;i<=remaining;i++){html+=`<div class="cal-day other">${i}</div>`;}}
+  document.getElementById('histCal').innerHTML=html;
+  document.getElementById('histExportOpts').style.display='none';
+  if(histSelectedDate)renderHistTable(histSelectedDate);
+  else document.getElementById('histTableWrap').style.display='none';
+}
+
+function selectHistDate(ds){histSelectedDate=ds;renderHistCal();}
+
+function getRoomCat(name){
+  for(const c of['hall','booth','private']){if((S.rooms[c]||[]).includes(name))return{hall:'大厅',booth:'卡座',private:'包间'}[c];}
+  return '未知';
+}
+
+function renderHistTable(ds){
+  const daySess=S.sessions.filter(s=>s.date===ds).sort((a,b)=>t2m(a.startTime)-t2m(b.startTime));
+  const wrap=document.getElementById('histTableWrap');
+  const title=document.getElementById('histTableTitle');
+  wrap.style.display='block';
+  title.innerHTML=`<i class="fas fa-calendar-day"></i> ${ds} 接待记录（${daySess.length}条）`;
+  const tbody=document.getElementById('histTbody');
+  if(!daySess.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--fg3);padding:20px">暂无记录</td></tr>';return;}
+  tbody.innerHTML=daySess.map(s=>{
+    const dur=s.duration||0;
+    const durStr=dur>=1?dur+'h':Math.round(dur*60)+'min';
+    return`<tr><td>${getRoomCat(s.room)}</td><td>${s.room}</td><td>${durStr}</td><td>${s.startTime}</td><td>${s.endTime}</td><td>${s.device||'-'}</td><td>${s.people||'-'}</td><td>${s.phone||''}</td></tr>`;
+  }).join('');
+}
+
+/* ===== Export CSV ===== */
+function exportHistCSV(){document.getElementById('histExportOpts').style.display='block';
+  if(histSelectedDate){document.getElementById('histExpStart').value=histSelectedDate;document.getElementById('histExpEnd').value=histSelectedDate;}
+  else{const ds=`${histYear}-${String(histMonth+1).padStart(2,'0')}-01`;document.getElementById('histExpStart').value=ds;const last=new Date(histYear,histMonth+1,0);document.getElementById('histExpEnd').value=`${histYear}-${String(histMonth+1).padStart(2,'0')}-${String(last.getDate()).padStart(2,'0')}`;}
+  document.getElementById('histExpQuick').value='month';
+}
+
+function onHistQuick(){
+  const v=document.getElementById('histExpQuick').value;
+  const n=new Date(),ds=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
+  if(v==='day'){document.getElementById('histExpStart').value=ds;document.getElementById('histExpEnd').value=ds;}
+  else if(v==='week'){const d=new Date(n);d.setDate(d.getDate()-d.getDay()+1);const ws=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;d.setDate(d.getDate()+6);document.getElementById('histExpStart').value=ws;document.getElementById('histExpEnd').value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+  else if(v==='month'){document.getElementById('histExpStart').value=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-01`;const last=new Date(n.getFullYear(),n.getMonth(),0);document.getElementById('histExpEnd').value=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(last.getDate()).padStart(2,'0')}`;}
+}
+
+function doExportHist(){
+  const s=document.getElementById('histExpStart').value,e=document.getElementById('histExpEnd').value;
+  if(!s||!e){toast('请选择日期范围','error');return;}
+  const filtered=S.sessions.filter(ss=>ss.date>=s&&ss.date<=e).sort((a,b)=>a.date.localeCompare(b.date)||t2m(a.startTime)-t2m(b.startTime));
+  if(!filtered.length){toast('该日期范围无数据','error');return;}
+  let csv='\uFEFF包间类型,包间名称,日期,游玩时长,开始时间,结束时间,游玩设备,人数,电话\n';
+  filtered.forEach(ss=>{const dur=ss.duration||0;const durStr=dur>=1?dur+'h':Math.round(dur*60)+'min';csv+=`${getRoomCat(ss.room)},${ss.room},${ss.date},${durStr},${ss.startTime},${ss.endTime},${ss.device||''},${ss.people||''},${ss.phone||''}\n`;});
+  downloadCSV(csv,`接待记录_${s}_${e}.csv`);
+  toast(`已导出${filtered.length}条记录`,'success');
+}
+
+function downloadCSV(csv,filename){const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();URL.revokeObjectURL(a.href);}
+
+/* ===== Data Analysis ===== */
+let roomChartInst=null,devChartInst=null;
+
+function initAna(){const n=new Date();const ds=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;document.getElementById('anaStart').value=ds+'-01';const last=new Date(n.getFullYear(),n.getMonth(),0);document.getElementById('anaEnd').value=`${ds}-${String(last.getDate()).padStart(2,'0')}`;}
+
+function runAnalysis(){
+  const s=document.getElementById('anaStart').value,e=document.getElementById('anaEnd').value;
+  if(!s||!e){toast('请选择日期范围','error');return;}
+  const filtered=S.sessions.filter(ss=>ss.date>=s&&ss.date<=e);
+  document.getElementById('anaCharts').style.display='grid';
+  document.getElementById('anaE').style.display='none';
+  // Room usage
+  const roomMap={};allRooms().forEach(r=>{roomMap[r.name]={cat:r.cat,total:0,count:0};});
+  filtered.forEach(ss=>{if(roomMap[ss.room])roomMap[ss.room].count++;});
+  const roomLabels=Object.keys(roomMap);
+  const roomData=roomLabels.map(r=>roomMap[r].count);
+  const roomColors=roomLabels.map(r=>{const c=roomMap[r].cat;return c==='hall'?'#F59E0B':c==='booth'?'#3B82F6':'#8B5CF6';});
+  if(roomChartInst)roomChartInst.destroy();
+  roomChartInst=new Chart(document.getElementById('roomChart'),{type:'bar',data:{labels:roomLabels,datasets:[{label:'使用次数',data:roomData,backgroundColor:roomColors,borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}}}}});
+  // Device usage
+  const devMap={};allDevs().forEach(d=>{devMap[d.name]={cat:d.cat,count:0};});
+  filtered.forEach(ss=>{if(devMap[ss.device])devMap[ss.device].count++;});
+  const devLabels=Object.keys(devMap);
+  const devData=devLabels.map(d=>devMap[d].count);
+  const devColors=devLabels.map(d=>{const c=devMap[d].cat;return c==='ps5'?'#006FCD':c==='switch'?'#E60012':c==='racing'?'#F59E0B':'#8B5CF6';});
+  if(devChartInst)devChartInst.destroy();
+  devChartInst=new Chart(document.getElementById('devChart'),{type:'bar',data:{labels:devLabels,datasets:[{label:'使用次数',data:devData,backgroundColor:devColors,borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}}}}});
+  // Summary
+  const totalSess=filtered.length;
+  const totalPeople=filtered.reduce((s,ss)=>s+(ss.people||0),0);
+  const totalHours=filtered.reduce((s,ss)=>s+(ss.duration||0),0);
+  document.getElementById('anaSummary').innerHTML=`
+    <div class="ana-stat"><div class="ana-stat-val">${totalSess}</div><div class="ana-stat-lbl">总接待场次</div></div>
+    <div class="ana-stat"><div class="ana-stat-val">${totalPeople}</div><div class="ana-stat-lbl">总接待人数</div></div>
+    <div class="ana-stat"><div class="ana-stat-val">${totalHours.toFixed(1)}h</div><div class="ana-stat-lbl">总游玩时长</div></div>
+    <div class="ana-stat"><div class="ana-stat-val">${filtered.length?((totalPeople/totalSess).toFixed(1)):'0'}</div><div class="ana-stat-lbl">平均每场人数</div></div>
+  `;
+}
+
+function exportAnaCSV(){
+  const s=document.getElementById('anaStart').value,e=document.getElementById('anaEnd').value;
+  if(!s||!e){toast('请先执行分析','error');return;}
+  const filtered=S.sessions.filter(ss=>ss.date>=s&&ss.date<=e).sort((a,b)=>a.date.localeCompare(b.date)||t2m(a.startTime)-t2m(b.startTime));
+  if(!filtered.length){toast('无数据可导出','error');return;}
+  let csv='\uFEFF包间类型,包间名称,日期,游玩时长,开始时间,结束时间,游玩设备,人数,电话\n';
+  filtered.forEach(ss=>{const dur=ss.duration||0;const durStr=dur>=1?dur+'h':Math.round(dur*60)+'min';csv+=`${getRoomCat(ss.room)},${ss.room},${ss.date},${durStr},${ss.startTime},${ss.endTime},${ss.device||''},${ss.people||''},${ss.phone||''}\n`;});
+  downloadCSV(csv,`数据分析_${s}_${e}.csv`);
+  toast('分析数据已导出','success');
+}
+
+async function init(){
+  S=await load();
+  document.getElementById('shopNameDisplay').textContent=S.shopName;
+  document.getElementById('shopNameInput').value=S.shopName;
+  document.getElementById('ckStart').value=nowS();updateCkEnd();
+  const n=new Date();const todayStr=fmtDate(n);document.getElementById('rvDate').value=todayStr;document.getElementById('sessDate').value=todayStr;
+  updateClock();setInterval(updateClock,1000);setInterval(renderGantt,60000);setInterval(renderSessLists,60000);
+  renderAll();
+  initHist();initAna();
+}
+init();
+</script>
+</body>
+</html>
